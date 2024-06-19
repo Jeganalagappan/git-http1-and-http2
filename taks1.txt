@@ -1,0 +1,120 @@
+Introduction :
+
+    The Hypertext Transfer Protocol, or HTTP, is an application protocol that has been the de facto standard 
+for communication on the World Wide Web since its invention in 1989. From the release of HTTP/1.1 in 1997
+until recently, there have been few revisions to the protocol. But in 2015, a reimagined version called 
+HTTP/2 came into use, which offered several methods to decrease latency, especially when dealing with 
+mobile platforms and server-intensive graphics and videos. HTTP/2 has since become increasingly popular, 
+with some estimates suggesting that around a third of all websites in the world support it. In this changing 
+landscape, web developers can benefit from understanding the technical differences between HTTP/1.1 and HTTP/2,
+allowing them to make informed and efficient decisions about evolving best practices.
+
+HTTP/1.1: The Old Guard
+  HTTP/1.1, introduced in 1997, was a significant improvement over its predecessors. It introduced several 
+features that improved the performance and efficiency of web communication. One of the key features of HTTP/1.1
+is the use of plain text messages to transfer requests and responses. This meant that each request and response
+was sent as a plain text message, which could be easily read and understood by humans.
+
+ The Drawbacks of HTTP/1.1
+  Despite its improvements, HTTP/1.1 has several drawbacks that led to the development of HTTP/2.
+Some of the key limitations of HTTP/1.1 include:
+
+Head of Line Blocking: In HTTP/1.1, each request and response is sent sequentially, which means that if a request
+is blocked, all subsequent requests are also blocked. This can lead to significant delays and performance issues.
+
+Plain Text Messages: HTTP/1.1 uses plain text messages to transfer requests and responses, which can be easily 
+intercepted and read by unauthorized parties.
+
+Repeated Header Information: In HTTP/1.1, each request and response includes repeated header information,
+which can lead to unnecessary overhead and slower performance.
+
+The New Kid on the Block
+  HTTP/2, introduced in 2015, was designed to address the limitations of HTTP/1.1. It introduces several 
+new features that improve the performance, efficiency, and security of web communication. Some of the key 
+features of HTTP/2 include:
+
+Binary Framing Layer: HTTP/2 uses a binary framing layer to transfer requests and responses,
+which is more efficient and secure than plain text messages.
+
+Multiplexing: HTTP/2 allows multiple requests and responses to be sent over a single connection, 
+which reduces the overhead of establishing multiple connections.
+
+Header Compression: HTTP/2 uses HPACK compression to reduce the size of header information,
+which leads to faster performance and reduced overhead.
+
+The Advantages of HTTP/2
+HTTP/2 offers several advantages over HTTP/1.1, including:
+
+Improved Performance: HTTP/2's multiplexing and header compression features lead to faster 
+performance and reduced overhead.
+
+Enhanced Security: HTTP/2's binary framing layer and encryption features provide improved security 
+and protection against unauthorized access.
+
+Better Resource Utilization: HTTP/2's ability to send multiple requests and responses over a single 
+connection reduces the overhead of establishing multiple connections.
+
+HTTP/1.1 — Resource Inlining
+    
+    In HTTP/1.1, if the developer knows in advance which additional resources the client machine
+will need to render the page, they can use a technique called resource inlining to include the required 
+resource directly within the HTML document that the server sends in response to the initial GET request.
+For example, if a client needs a specific CSS file to render a page, inlining that CSS file will provide  
+the client with the needed resource before it asks for it,reducing the total number of requests that the client must send.
+
+But there are a few problems with resource inlining. Including the resource in the HTML document is 
+a viable solution for smaller, text-based resources, but larger files in non-text formats can greatly 
+increase the size of the HTML document, which can ultimately decrease the connection speed and nullify 
+the original advantage gained from using this technique. Also, since the inlined resources are no longer 
+separate from the HTML document, there is no mechanism for the client to decline resources that it already has, 
+or to place a resource in its cache. If multiple pages require the resource, each new HTML document 
+will have the same resource inlined in its code, leading to larger HTML documents and longer load times than 
+if the resource were simply cached in the beginning.
+
+A major drawback of resource inlining, then, is that the client cannot separate the resource and the document. 
+A finer level of control is needed to optimize the connection, a need that HTTP/2 seeks to meet with server push.
+
+HTTP/2 — Server Push
+Since HTTP/2 enables multiple concurrent responses to a client’s initial GET request, a server can send a resource to 
+a client along with the requested HTML page, providing the resource before the client asks for it. 
+This process is called server push. In this way, an HTTP/2 connection can accomplish the same goal of resource inlining
+while maintaining the separation between the pushed resource and the document. This means that the client can decide 
+to cache or decline the pushed resource separate from the main HTML document, fixing the major drawback of resource inlining.
+
+In HTTP/2, this process begins when the server sends a PUSH_PROMISE frame to inform the client that it is going to push a resource.
+This frame includes only the header of the message, and allows the client to know ahead of time which resource the server will push. 
+If it already has the resource cached, the client can decline the push by sending a RST_STREAM frame in response. 
+The PUSH_PROMISE frame also saves the client from sending a duplicate request to the server, since it knows which resources 
+the server is going to push.
+
+It is important to note here that the emphasis of server push is client control. If a client needed to adjust the priority of server push,
+or even disable it, it could at any time send a SETTINGS frame to modify this HTTP/2 feature.
+
+Although this feature has a lot of potential, server push is not always the answer to optimizing your web application.
+For example, some web browsers cannot always cancel pushed requests, even if the client already has the resource cached. 
+If the client mistakenly allows the server to send a duplicate resource, the server push can use up the connection unnecessarily.
+In the end, server push should be used at the discretion of the developer. For more on how to strategically use server push and 
+optimize web applications, check out the PRPL pattern developed by Google. To learn more about the possible issues with server push, 
+see Jake Archibald’s blog post HTTP/2 push is tougher than I thought.
+
+Compression
+  A common method of optimizing web applications is to use compression algorithms to reduce the size of HTTP messages that travel between the
+client and the server. HTTP/1.1 and HTTP/2 both use this strategy, but there are implementation problems in the former that prohibit compressing
+the entire message. The following section will discuss why this is the case, and how HTTP/2 can provide a solution.
+
+HTTP/1.1
+  Programs like gzip have long been used to compress the data sent in HTTP messages, especially to decrease the size of CSS and JavaScript files.
+The header component of a message, however, is always sent as plain text. Although each header is quite small, the burden of this uncompressed 
+data weighs heavier and heavier on the connection as more requests are made, particularly penalizing complicated, API-heavy web applications 
+that require many different resources and thus many different resource requests. Additionally, the use of cookies can sometimes make headers 
+much larger, increasing the need for some kind of compression.
+
+In order to solve this bottleneck, HTTP/2 uses HPACK compression to shrink the size of headers, a topic discussed further in the next section.
+
+HTTP/2
+  One of the themes that has come up again and again in HTTP/2 is its ability to use the binary framing layer to exhibit greater control over 
+finer detail. The same is true when it comes to header compression. HTTP/2 can split headers from their data, resulting in a header frame and
+a data frame. The HTTP/2-specific compression program HPACK can then compress this header frame. This algorithm can encode the header metadata 
+using Huffman coding, thereby greatly decreasing its size. Additionally, HPACK can keep track of previously conveyed metadata fields and further
+ compress them according to a dynamically altered index shared between the client and the server. For example, take the following two requests:
+
